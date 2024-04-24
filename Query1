@@ -1,0 +1,22 @@
+SELECT 
+    m.id AS merchant,
+    m.name AS name,
+    MAX(CASE WHEN e.field_name = 'COMMERCIAL_PARAMS_MERCHANT_REGION' THEN e.field_value END) AS region,
+    MAX(CASE WHEN e.field_name = 'COMMERCIAL_PARAMS_MERCHANT_SEGMENT' THEN e.field_value END) AS segment,
+    MAX(CASE WHEN e.field_name = 'COMMERCIAL_PARAMS_MERCHANT_VERTICAL' THEN e.field_value END) AS vertical,
+    MAX(CASE WHEN p.id IS NOT NULL THEN 1 ELSE 0 END) AS PROCESSING
+FROM 
+    pay.merchant m
+LEFT JOIN 
+    pay.entity_metadata e ON m.id = e.entity_id 
+                           AND e.entity_name = 'Merchant' 
+                           AND e.field_name IN ('COMMERCIAL_PARAMS_MERCHANT_REGION', 'COMMERCIAL_PARAMS_MERCHANT_SEGMENT', 'COMMERCIAL_PARAMS_MERCHANT_VERTICAL')
+LEFT JOIN 
+    pay.payment p ON m.id = p.merchant_id
+                  AND p.confirm_date >= '2024-01-01'
+WHERE 
+    m.ativo = 1 and
+    m.name not like '%EBANX%'
+GROUP BY 
+    m.id, m.name
+ORDER BY 1
